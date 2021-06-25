@@ -14,7 +14,6 @@ client.connect((err, success) => {
   }
 });
 
-
 app.get('/', (req, res) => {
   res.send('Responding to GET request at /');
 });
