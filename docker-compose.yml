@@ -1,3 +1,5 @@
+
+
 # Use postgres/example user/password credentials
 version: '3.1'
 
@@ -12,9 +14,7 @@ services:
   db:
     image: postgres
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: reviewsDB
-      POSTGRES_PASSWORD: password
+    env_file:
+      - ./services/reviews/config-env/docker-env.env
     ports:
       - "5432:5432"

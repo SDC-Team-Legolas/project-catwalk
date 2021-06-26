@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS products;
-DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS imported_reviews;
+DROP TAbLE IF EXISTS photos;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS products;
 
 CREATE TABLE products(
   id SERIAL PRIMARY KEY,
@@ -23,7 +24,15 @@ CREATE TABLE reviews(
   reviewer_name VARCHAR(255),
   reviewer_email VARCHAR(255),
   response VARCHAR(255),
-  helpfulness INT
+  helpfulness INT,
+  FOREIGN KEY(product_id) references products(id)
+);
+
+CREATE TABLE photos(
+  id SERIAL PRIMARY KEY,
+  review_id INT,
+  url VARCHAR(255),
+  FOREIGN KEY(review_id) references reviews(id)
 );
 
 CREATE TABLE imported_reviews(
@@ -42,6 +51,7 @@ CREATE TABLE imported_reviews(
 );
 
 \COPY imported_reviews FROM './data/reviews.csv' DELIMITER ',' CSV HEADER;
+\COPY products FROM './data/product.csv' DELIMITER ',' CSV HEADER;
 
 INSERT INTO reviews (id, product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness)
   SELECT
@@ -58,5 +68,7 @@ INSERT INTO reviews (id, product_id, rating, date, summary, body, recommend, rep
     i.response as response,
     i.helpfulness::int as helpfulness
   FROM imported_reviews i;
+
+\COPY photos FROM './data/reviews_photos.csv' DELIMITER ',' CSV HEADER;
 
 DROP TABLE imported_reviews;

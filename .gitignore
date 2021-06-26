@@ -5,3 +5,5 @@ package-lock.json
 /testing/
 configAPI.js
 data
+/services/reviews/config-env/docker-env.env
+/services/reviews/config-env/config.js
