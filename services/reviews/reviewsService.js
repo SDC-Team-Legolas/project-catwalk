@@ -29,8 +29,6 @@ app.get('/reviews', (req, res) => {
   client.query(`SELECT * FROM reviews WHERE (product_id = ${req.body.product_id}) LIMIT ${count}`)
     .then(response => {
       let sortedReviews = response.rows.sort((rowA, rowB) => {
-        console.log('rowA: ', rowA[sort]);
-        console.log('rowB: ', rowB[sort]);
         return rowB[sort] - rowA[sort];
       });
 
@@ -49,6 +47,29 @@ app.get('/reviews', (req, res) => {
       res.send(err);
     });
 });
+
+// app.get('/reviews/meta', (req, res) => {
+//   client.query(`SELECT * FROM reviews WHERE (product_id = ${req.body.product_id}`)
+//     .then(response => {
+//       let ratingsFrequencies = {};
+//       let recommendationCount = 0;
+//       for (let review of response.rows) {
+//         if (review.recommended) { recommendationCount++; }
+//         if (ratingsFrequencies[review.rating]) {
+//           ratingsFrequencies[review.rating]++;
+//         } else {
+//           ratingsFrequencies[review.rating] = 1;
+//         }
+//       }
+
+//       let responseObj = {
+//         product_id: req.body.product_id,
+//         ratings: ratingsFrequencies,
+//         recommended: ,
+//         characteristics:
+//       };
+//     });
+// });
 
 app.listen(port, () => {
   console.log(`REVIEWS SERVICE LISTENING AT PORT ${port}`);

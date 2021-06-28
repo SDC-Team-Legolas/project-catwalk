@@ -1,7 +1,9 @@
 DROP TABLE IF EXISTS imported_reviews;
-DROP TAbLE IF EXISTS photos;
+DROP TABLE IF EXISTS photos;
+DROP TABLE IF EXISTS characteristics CASCADE;
+DROP TABLE IF EXISTS review_characteristics;
 DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS products CASCADE;
 
 CREATE TABLE products(
   id SERIAL PRIMARY KEY,
@@ -26,6 +28,22 @@ CREATE TABLE reviews(
   response VARCHAR(255),
   helpfulness INT,
   FOREIGN KEY(product_id) references products(id)
+);
+
+CREATE TABLE characteristics(
+  id SERIAL PRIMARY KEY,
+  product_id INT,
+  name VARCHAR(100),
+  FOREIGN KEY(product_id) references products(id)
+);
+
+CREATE TABLE review_characteristics(
+  id SERIAL PRIMARY KEY,
+  characteristic_id INT,
+  review_id INT,
+  value INT,
+  FOREIGN KEY(characteristic_id) references characteristics(id),
+  FOREIGN KEY(review_id) references reviews(id)
 );
 
 CREATE TABLE photos(
@@ -70,5 +88,7 @@ INSERT INTO reviews (id, product_id, rating, date, summary, body, recommend, rep
   FROM imported_reviews i;
 
 \COPY photos FROM './data/reviews_photos.csv' DELIMITER ',' CSV HEADER;
+\COPY characteristics FROM './data/characteristics.csv' DELIMITER ',' CSV HEADER;
+\COPY review_characteristics FROM './data/characteristic_reviews.csv' DELIMITER ',' CSV HEADER;
 
 DROP TABLE imported_reviews;
