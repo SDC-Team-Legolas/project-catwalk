@@ -28,7 +28,7 @@ app.get('/reviews', (req, res) => {
   let sort = { helpful: 'helpfulness', newest: 'date', relevant: 'rating'}[req.body.sort];
   client.query(`SELECT * FROM reviews WHERE (product_id = ${req.body.product_id}) LIMIT ${count}`)
     .then(response => {
-      let sortedReviews = response.rows.sort((rowA, rowB) => {
+      let sortedReviews = response.rows.filter(review => !review.reported).sort((rowA, rowB) => {
         return rowB[sort] - rowA[sort];
       });
 
@@ -38,7 +38,6 @@ app.get('/reviews', (req, res) => {
         count: req.body.count,
         results: sortedReviews
       };
-      console.log(responseObj);
       res.send(responseObj);
     })
     .catch(err => {
@@ -57,7 +56,7 @@ app.get('/reviews/meta', (req, res) => {
       let reviewsAnalyzed = {};
       for (let review of response.rows) {
         if (!reviewsAnalyzed[review.id]) {
-          if (review.recommended) { recommendationCount['true']++; } else { recommendationCount['false']++}
+          if (review.recommend) { recommendationCount['true']++; } else { recommendationCount['false']++}
           if (ratingsFrequencies[review.rating]) {
             ratingsFrequencies[review.rating]++;
           } else {
@@ -81,6 +80,21 @@ app.get('/reviews/meta', (req, res) => {
         characteristics: Object.keys(characteristics).map(charaName => ({ id: characteristics[charaName].id, charaName: characteristics[charaName].average }))
       });
     });
+});
+
+app.post('/reviews', (req, res) => {
+  client.query(`INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reviewer_name, reviewer_email) VALUES (${req.body.product_id}, ${req.body.rating}, to_timestamp(${Date.now()}), '${req.body.summary}', '${req.body.body}', ${req.body.recommend}, '${req.body.name}', '${req.body.email}')`)
+    .then(response => {
+      res.send(response);
+    })
+    .catch(err => {
+      res.status(500);
+      res.send(err);
+    });
+});
+
+app.put('/reviews/:review_id/helpful', (req, res) => {
+  res.send(`Received put request w/ review_id: ${req.params.review_id}`);
 });
 
 app.listen(port, () => {

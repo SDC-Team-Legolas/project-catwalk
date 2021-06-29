@@ -71,9 +71,8 @@ CREATE TABLE imported_reviews(
 \COPY imported_reviews FROM './data/reviews.csv' DELIMITER ',' CSV HEADER;
 \COPY products FROM './data/product.csv' DELIMITER ',' CSV HEADER;
 
-INSERT INTO reviews (id, product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness)
+INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness)
   SELECT
-    i.id::int as id,
     i.product_id::int as product_id,
     i.rating::int as rating,
     TIMESTAMP 'epoch' + i.date::bigint * INTERVAL '1 second' as date,
