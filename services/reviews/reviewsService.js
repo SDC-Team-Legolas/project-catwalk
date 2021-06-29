@@ -85,7 +85,8 @@ app.get('/reviews/meta', (req, res) => {
 app.post('/reviews', (req, res) => {
   client.query(`INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reviewer_name, reviewer_email) VALUES (${req.body.product_id}, ${req.body.rating}, to_timestamp(${Date.now()}), '${req.body.summary}', '${req.body.body}', ${req.body.recommend}, '${req.body.name}', '${req.body.email}')`)
     .then(response => {
-      res.send(response);
+      res.status(201);
+      res.end();
     })
     .catch(err => {
       res.status(500);
@@ -94,7 +95,15 @@ app.post('/reviews', (req, res) => {
 });
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
-  res.send(`Received put request w/ review_id: ${req.params.review_id}`);
+  client.query(`UPDATE reviews SET helpfulness = helpfulness + 1 WHERE (id = ${req.params.review_id})`)
+    .then(response => {
+      res.status(204);
+      res.end();
+    })
+    .catch(err => {
+      res.status(500);
+      res.send(err);
+    });
 });
 
 app.listen(port, () => {
