@@ -48,28 +48,40 @@ app.get('/reviews', (req, res) => {
     });
 });
 
-// app.get('/reviews/meta', (req, res) => {
-//   client.query(`SELECT * FROM reviews WHERE (product_id = ${req.body.product_id}`)
-//     .then(response => {
-//       let ratingsFrequencies = {};
-//       let recommendationCount = 0;
-//       for (let review of response.rows) {
-//         if (review.recommended) { recommendationCount++; }
-//         if (ratingsFrequencies[review.rating]) {
-//           ratingsFrequencies[review.rating]++;
-//         } else {
-//           ratingsFrequencies[review.rating] = 1;
-//         }
-//       }
+app.get('/reviews/meta', (req, res) => {
+  client.query(`SELECT r.id, c.id AS cid, name, value, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness FROM characteristics c LEFT OUTER JOIN review_characteristics rc ON (c.id = rc.characteristic_id) LEFT OUTER JOIN reviews r ON (review_id = r.id) WHERE (r.product_id = ${req.body.product_id})`)
+    .then(response => {
+      let ratingsFrequencies = {};
+      let characteristics = {};
+      let recommendationCount = {true: 0, false: 0};
+      let reviewsAnalyzed = {};
+      for (let review of response.rows) {
+        if (!reviewsAnalyzed[review.id]) {
+          if (review.recommended) { recommendationCount['true']++; } else { recommendationCount['false']++}
+          if (ratingsFrequencies[review.rating]) {
+            ratingsFrequencies[review.rating]++;
+          } else {
+            ratingsFrequencies[review.rating] = 1;
+          }
+        }
+        if (characteristics[review.name]) {
+          let chara = characteristics[review.name];
+          chara.total += review.value;
+          chara.count++;
+          chara.average = chara.total / chara.count;
+        } else {
+          characteristics[review.name] = {id: review.cid, total: review.value, count: 1, average: review.value};
+        }
+      }
 
-//       let responseObj = {
-//         product_id: req.body.product_id,
-//         ratings: ratingsFrequencies,
-//         recommended: ,
-//         characteristics:
-//       };
-//     });
-// });
+      res.send({
+        product_id: req.body.product_id,
+        ratings: ratingsFrequencies,
+        recommended: recommendationCount,
+        characteristics: Object.keys(characteristics).map(charaName => ({ id: characteristics[charaName].id, charaName: characteristics[charaName].average }))
+      });
+    });
+});
 
 app.listen(port, () => {
   console.log(`REVIEWS SERVICE LISTENING AT PORT ${port}`);
