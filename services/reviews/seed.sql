@@ -30,12 +30,16 @@ CREATE TABLE reviews(
   FOREIGN KEY(product_id) references products(id)
 );
 
+CREATE INDEX idx_product_id ON reviews(product_id);
+
 CREATE TABLE characteristics(
   id SERIAL PRIMARY KEY,
   product_id INT,
   name VARCHAR(100),
   FOREIGN KEY(product_id) references products(id)
 );
+
+CREATE INDEX idx_characteristic_id ON characteristics(id);
 
 CREATE TABLE review_characteristics(
   id SERIAL PRIMARY KEY,
@@ -46,12 +50,16 @@ CREATE TABLE review_characteristics(
   FOREIGN KEY(review_id) references reviews(id)
 );
 
+CREATE INDEX idx_review_characteristics_id ON review_characteristics(id);
+
 CREATE TABLE photos(
   id SERIAL PRIMARY KEY,
   review_id INT,
   url VARCHAR(255),
   FOREIGN KEY(review_id) references reviews(id)
 );
+
+CREATE INDEX idx_photo_id ON photos(id);
 
 CREATE TABLE imported_reviews(
   id VARCHAR(255),
