@@ -106,6 +106,18 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
     });
 });
 
+app.put('/reviews/:review_id/report', (req, res) => {
+  client.query(`UPDATE reviews SET reported = true WHERE (reviews.id = ${req.params.review_id})`)
+    .then(response => {
+      res.status(204);
+      res.end();
+    })
+    .catch(err => {
+      res.status(500);
+      res.send(err);
+    });
+});
+
 app.listen(port, () => {
   console.log(`REVIEWS SERVICE LISTENING AT PORT ${port}`);
 });
