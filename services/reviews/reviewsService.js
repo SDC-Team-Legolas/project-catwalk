@@ -1,15 +1,15 @@
 const express = require('express');
 const app = express();
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const dbConfig = require('./config-env/config.js');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 let port = 1234;
-let client = new Client(`postgres://${dbConfig.user}:${dbConfig.pass}@project-catwalk_db_1:5432/${dbConfig.db}`);
+let pool = new Pool(`postgres://${dbConfig.user}:${dbConfig.pass}@project-catwalk_db_1:5432/${dbConfig.db}`);
 
-client.connect((err, success) => {
+pool.connect((err, success) => {
   if (success) {
     console.log('Connected to postgres DB!');
   } else if (err) {
@@ -26,7 +26,7 @@ app.get('/reviews', (req, res) => {
   let page = req.body.page || 1;
   let count = req.body.count || 5;
   let sort = { helpful: 'helpfulness', newest: 'date', relevant: 'rating'}[req.body.sort];
-  client.query(`SELECT * FROM reviews WHERE (product_id = ${req.body.product_id}) LIMIT ${count}`)
+  pool.query('SELECT * FROM reviews WHERE (product_id = $1) LIMIT $2', [req.body.product_id, count])
     .then(response => {
       let sortedReviews = response.rows.filter(review => !review.reported).sort((rowA, rowB) => {
         return rowB[sort] - rowA[sort];
@@ -48,7 +48,7 @@ app.get('/reviews', (req, res) => {
 });
 
 app.get('/reviews/meta', (req, res) => {
-  client.query(`SELECT r.id, c.id AS cid, name, value, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness FROM characteristics c LEFT OUTER JOIN review_characteristics rc ON (c.id = rc.characteristic_id) LEFT OUTER JOIN reviews r ON (review_id = r.id) WHERE (r.product_id = ${req.body.product_id})`)
+  pool.query('SELECT r.id, c.id AS cid, name, value, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness FROM characteristics c LEFT OUTER JOIN review_characteristics rc ON (c.id = rc.characteristic_id) LEFT OUTER JOIN reviews r ON (review_id = r.id) WHERE (r.product_id = $1)', [req.body.product_id])
     .then(response => {
       let ratingsFrequencies = {};
       let characteristics = {};
@@ -83,7 +83,7 @@ app.get('/reviews/meta', (req, res) => {
 });
 
 app.post('/reviews', (req, res) => {
-  client.query(`INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reviewer_name, reviewer_email) VALUES (${req.body.product_id}, ${req.body.rating}, to_timestamp(${Date.now()}), '${req.body.summary}', '${req.body.body}', ${req.body.recommend}, '${req.body.name}', '${req.body.email}')`)
+  pool.query('INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reviewer_name, reviewer_email) VALUES ($1, $2, to_timestamp($3), "$4", "$5", $6, "$7", "$8")', [req.body.product_id, req.body.rating, req.body.date, req.body.summary, req.body.body, req.body.recommend, req.body.reviewer_name, req.body.reviewer_email])
     .then(response => {
       res.status(201);
       res.end();
@@ -95,7 +95,7 @@ app.post('/reviews', (req, res) => {
 });
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
-  client.query(`UPDATE reviews SET helpfulness = helpfulness + 1 WHERE (id = ${req.params.review_id})`)
+  pool.query('UPDATE reviews SET helpfulness = helpfulness + 1 WHERE (id = $1)', [req.params.review_id])
     .then(response => {
       res.status(204);
       res.end();
@@ -107,7 +107,7 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
 });
 
 app.put('/reviews/:review_id/report', (req, res) => {
-  client.query(`UPDATE reviews SET reported = true WHERE (reviews.id = ${req.params.review_id})`)
+  pool.query('UPDATE reviews SET reported = true WHERE (reviews.id = $1)', [req.params.review_id])
     .then(response => {
       res.status(204);
       res.end();
