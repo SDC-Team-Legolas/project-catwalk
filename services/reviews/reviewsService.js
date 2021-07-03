@@ -14,8 +14,6 @@ let pool = new Pool({
   password: dbConfig.password,
   port: 5432});
 
-console.log(dbConfig.password);
-
 pool.connect((err, success) => {
   if (success) {
     console.log('Connected to postgres DB!');
