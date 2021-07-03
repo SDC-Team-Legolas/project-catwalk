@@ -7,7 +7,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 let port = 1234;
-let pool = new Pool(`postgres://${dbConfig.user}:${dbConfig.pass}@project-catwalk_db_1:5432/${dbConfig.db}`);
+let pool = new Pool({
+  user: dbConfig.user,
+  host: dbConfig.host,
+  database: dbConfig.db,
+  password: dbConfig.password,
+  port: 5432});
 
 pool.connect((err, success) => {
   if (success) {
